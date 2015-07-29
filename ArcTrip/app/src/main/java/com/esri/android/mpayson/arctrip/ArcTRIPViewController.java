@@ -58,7 +58,7 @@ public class ArcTRIPViewController extends NavigationViewController
 
 
         getAccount().getPortal().fetchWebMap("1449dba9fbd74bd59077242b7dfefe5b",
-                new V2CallbackListenerHelper<>(new V2CallbackListener<WebMap>() {
+                new V2CallbackListenerHelper<WebMap>(new V2CallbackListener<WebMap>() {
                     @Override
                     public void onCallbackCompleted(WebMap webMap, Throwable throwable) {
                         dismissProgress();
