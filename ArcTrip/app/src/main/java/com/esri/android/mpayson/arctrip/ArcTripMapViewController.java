@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.URLUtil;
 import android.widget.TextView;
 
 import com.esri.android.map.GraphicsLayer;
@@ -21,6 +22,7 @@ import com.esri.appframework.wrappers.AGSMap;
 import com.esri.core.geometry.Geometry;
 import com.esri.core.geometry.GeometryEngine;
 import com.esri.core.geometry.Point;
+import com.esri.core.geometry.Polyline;
 import com.esri.core.geometry.SpatialReference;
 import com.esri.core.map.Graphic;
 import com.esri.core.renderer.SimpleRenderer;
@@ -130,7 +132,7 @@ public class ArcTripMapViewController extends MapViewController
                     drawDot(PointType.START, mapPoint, "S");
                     mStartP = mapPoint;
                 } else if (mEndP == null) {
-                    drawDot(PointType.END, mapPoint, "S");
+                    drawDot(PointType.END, mapPoint, "F");
                     mEndP = mapPoint;
                     mRouteAsyncTask = new generateAutoRoute(mStartP, mEndP).execute();
                 }
@@ -154,7 +156,8 @@ public class ArcTripMapViewController extends MapViewController
 
         @Override
         protected void onPreExecute(){
-
+            DialogUtils.showProgressDialog("Generating Routes", "We'll get you there...",
+                    getDependencyContainer().getCurrentActivity());
         }
 
         @Override
@@ -186,28 +189,30 @@ public class ArcTripMapViewController extends MapViewController
 
         @Override
         protected void onPostExecute(RouteResult results){
+            DialogUtils.dismissProgress();
             if(results != null) {
                 Log.d(TAG, "k");
                 mRouteResults = results;
                 drawRouteResult(0);
                 mRouteResultViewController = new RouteResultViewController(0, results.getRoutes().size());
+//                mRouteResultViewController = new RouteResultViewController(0, 5);
                 mRouteResultViewController.setDependencyContainer(getDependencyContainer());
-//                ViewAccessory routeResultViewAccessory = new ViewAccessory();
-//                routeResultViewAccessory.setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View v) {
-//                        Log.d(TAG, "clicked_");
-//                    }
-//                });
-//                showViewControllerInBottomPanel(mRouteResultViewController, routeResultViewAccessory);
+                ViewAccessory routeResultViewAccessory = new ViewAccessory();
+                routeResultViewAccessory.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Log.d(TAG, "clicked_");
+                    }
+                });
+                showViewControllerInBottomPanel(mRouteResultViewController, routeResultViewAccessory);
                 showViewControllerInBottomPanel(mRouteResultViewController);
             }
         }
 
     }
     protected void drawRouteResult(int index){
-        mRouteLayer.clearSelection();
-        mRouteLayer.addGraphic(mRouteResults.getRoutes().get(index).getRouteGraphic());
+        Polyline routeGeom = (Polyline) mRouteResults.getRoutes().get(index).getRouteGraphic().getGeometry();
+        mRouteLayer.addGraphic(new Graphic(routeGeom, new SimpleLineSymbol(Color.BLUE,3)));
     }
 
     public void drawDot(PointType type, Point p, String dispStr){
@@ -253,26 +258,28 @@ public class ArcTripMapViewController extends MapViewController
 
         @Override
         public View createView(ViewGroup viewGroup, Bundle bundle) {
+
             View v = getDependencyContainer().getLayoutInflater()
-                    .inflate(R.layout.route_select_layout, viewGroup);
+                    .inflate(R.layout.route_select_layout, viewGroup, false);
             mTextView = (TextView) v.findViewById(R.id.route_select_textview);
+            changeTextView(mCurrRoute);
 
             v.setOnTouchListener(new OnSwipeTouchListener(getContext()) {
                 public void onSwipeTop() {
 
                 }
                 public void onSwipeRight() {
-                    if(mCurrRoute<mRouteResultSize){
-                        mCurrRoute++;
-                        changeTextView(mCurrRoute);
-                        drawRouteResult(mCurrRoute);
-                    }
-                }
-                public void onSwipeLeft() {
                     if(mCurrRoute>= 0){
                         mCurrRoute--;
                         changeTextView(mCurrRoute);
-                        drawRouteResult(mCurrRoute);
+//                        drawRouteResult(mCurrRoute);
+                    }
+                }
+                public void onSwipeLeft() {
+                    if(mCurrRoute<mRouteResultSize){
+                        mCurrRoute++;
+                        changeTextView(mCurrRoute);
+//                        drawRouteResult(mCurrRoute);
                     }
                 }
                 public void onSwipeBottom() {
@@ -290,7 +297,7 @@ public class ArcTripMapViewController extends MapViewController
 
         private void changeTextView(int route){
             int dispRoute = route + 1;
-            mTextView.setText("Route" + dispRoute);
+            mTextView.setText("Route " + dispRoute);
 
         }
 

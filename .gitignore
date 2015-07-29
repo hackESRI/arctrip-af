@@ -2,6 +2,10 @@
 *.apk
 *.ap_
 
+ArcTrip/.idea/gradle.xml
+ArcTrip/.idea/misc.xml
+ArcTrip/.idea/vcs.xml
+
 # Files for the Dalvik VM
 *.dex
 

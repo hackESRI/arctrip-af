@@ -43,17 +43,18 @@ public class ArcTRIPViewController extends NavigationViewController
     }
 
     private void signIn(){
-        showProgressDialog("Initializing the app...", "Two seconds!");
+        DialogUtils.showProgressDialog("Initializing the app...", "Two seconds!",
+                getDependencyContainer().getCurrentActivity());
         AccountManager.getInstance().signIn("http://ess.maps.arcgis.com", "MThornton_ess", "Kaleytoby13!", this);
     }
 
     private void loadMap(){
-        ProgressDialog dialog = getProgressDialog();
+        ProgressDialog dialog = DialogUtils.getProgressDialog(getDependencyContainer().getCurrentActivity());
         String message = "Just a jiffy...";
         if(dialog.isShowing()){
             dialog.setMessage(message);
         } else{
-            showProgressDialog("Loading...", message);
+            DialogUtils.showProgressDialog("Loading...", message, getDependencyContainer().getCurrentActivity());
         }
 
 
@@ -61,10 +62,10 @@ public class ArcTRIPViewController extends NavigationViewController
                 new V2CallbackListenerHelper<WebMap>(new V2CallbackListener<WebMap>() {
                     @Override
                     public void onCallbackCompleted(WebMap webMap, Throwable throwable) {
-                        dismissProgress();
+                        DialogUtils.dismissProgress();
 
                         if (throwable != null) {
-                            showAlert("Error", "Error downloading map");
+                            DialogUtils.showAlert("Error", "Error downloading map", getDependencyContainer().getCurrentActivity());
                             return;
                         }
 
@@ -85,47 +86,18 @@ public class ArcTRIPViewController extends NavigationViewController
 
     //region PROGRESS DIALOG
 
-    //Non-interactive progress dialog
-    private void showProgressDialog(String title, String message){
-        ProgressDialog dialog = getProgressDialog();
-        dialog.setTitle(title);
-        dialog.setMessage(message);
-        dialog.show();
-    }
-
-    //Get progress dialog, kinda self-explanatory
-    private ProgressDialog getProgressDialog(){
-
-        if (mProgressDialog == null){
-            mProgressDialog = new ProgressDialog(getDependencyContainer().getCurrentActivity());
-        }
-        return mProgressDialog;
-    }
-
-    //Get rid of that damn dialog box
-    private void dismissProgress() {
-        mProgressDialog.dismiss();
-        mProgressDialog = null;
-    }
-
     @Override
     public void onSignInFinished(@NonNull Account account) {
         mAccount = account;
-        dismissProgress();
+        DialogUtils.dismissProgress();
         AccountManager.getInstance().setActiveAccount(account);
         loadMap();
     }
 
     @Override
     public void onSignInError(@NonNull Throwable throwable) {
-        dismissProgress();
-        showAlert("Error", "Error signing in");
-    }
-
-    //Oh no something went wrong, #poundthealarm
-    private void showAlert(String title, String message) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getDependencyContainer().getCurrentActivity());
-        builder.setTitle(title).setMessage(message).setPositiveButton("Ok", null).show();
+        DialogUtils.dismissProgress();
+        DialogUtils.showAlert("Error", "Error signing in", getDependencyContainer().getCurrentActivity());
     }
 
     //endregion
