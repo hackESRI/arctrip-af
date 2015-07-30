@@ -12,11 +12,21 @@ import com.esri.appframework.viewcontrollers.ViewController;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by maxw8108 on 7/29/15.
  */
 public class NearbyFeatureRecyclerVC extends RecyclerViewController{
+    Listener mListener;
+
+    public void setListener(Listener listener){
+        mListener = listener;
+    }
+
+    public interface Listener{
+        void onNearbyFeatureSelected(UUID id);
+    }
 
     @Override
     public View createView(ViewGroup parentView, Bundle savedState){
@@ -58,6 +68,13 @@ public class NearbyFeatureRecyclerVC extends RecyclerViewController{
             super.bindViewHolder(viewHolder);
 
             NearbyFeatureListView v = (NearbyFeatureListView) viewHolder.itemView;
+
+            v.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mListener.onNearbyFeatureSelected(mNearbyFeature.getID());
+                }
+            });
 
             v.setStars(mNearbyFeature.getStars());
             v.setTitleText(mNearbyFeature.getTitle());

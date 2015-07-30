@@ -20,12 +20,14 @@ import com.esri.core.common.V2CallbackListener;
 import com.esri.core.portal.WebMap;
 import com.esri.core.tasks.na.Route;
 
+import java.util.UUID;
+
 /**
  * Created by maxw8108 on 7/27/15.
  */
 public class ArcTRIPViewController extends NavigationViewController
         implements SignInListener, ArcTripMapViewController.ArcTripMapVCListener,
-        SelectTypeDialogVC.Listener{
+        SelectTypeDialogVC.Listener, NearbyFeatureRecyclerVC.Listener{
 
     final static String TAG = "ArcTRIPViewController";
 
@@ -133,6 +135,14 @@ public class ArcTRIPViewController extends NavigationViewController
         mSelectTypeDialog.dismiss();
         NearbyFeatureRecyclerVC nearbyFeatureRecyclerVC = new NearbyFeatureRecyclerVC();
         nearbyFeatureRecyclerVC.setDependencyContainer(getDependencyContainer());
+        nearbyFeatureRecyclerVC.setListener(this);
         goTo(nearbyFeatureRecyclerVC);
+    }
+
+    @Override
+    public void onNearbyFeatureSelected(UUID id) {
+        SelectedFeatureViewController selectedFeatureViewController = new SelectedFeatureViewController(id);
+        selectedFeatureViewController.setDependencyContainer(getDependencyContainer());
+        goTo(selectedFeatureViewController);
     }
 }

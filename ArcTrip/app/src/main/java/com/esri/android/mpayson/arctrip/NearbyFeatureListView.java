@@ -39,7 +39,7 @@ public class NearbyFeatureListView extends android.support.v7.widget.CardView{
         mStars.add((ImageView) findViewById(R.id.star_5));
         mStars.add((ImageView) findViewById(R.id.star_4));
         mStars.add((ImageView) findViewById(R.id.star_3));
-        mStars.add((ImageView) findViewById(R.id.star_3));
+        mStars.add((ImageView) findViewById(R.id.star_2));
         mStars.add((ImageView) findViewById(R.id.star_1));
     }
 

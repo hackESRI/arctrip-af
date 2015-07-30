@@ -56,6 +56,7 @@ public class ArcTripMapViewController extends MapViewController
 
     private GraphicsLayer mMarkerLayer;
     private GraphicsLayer mRouteLayer;
+    SpatialReference mSpatialReference;
 
     private AsyncTask mRouteAsyncTask;
     private RouteTask mRouteTask;
@@ -101,6 +102,8 @@ public class ArcTripMapViewController extends MapViewController
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        mSpatialReference = getMapSpatialReference();
 
         Log.d(TAG, "onMapInitialization called");
         super.onMapInitialization(event);
@@ -178,8 +181,9 @@ public class ArcTripMapViewController extends MapViewController
                 RouteParameters rp = mRouteTask
                         .retrieveDefaultRouteTaskParameters();
                 rp.setDirectionsLengthUnit(DirectionsLengthUnit.MILES);
-                rp.setImpedanceAttributeName("Time");
-                rp.setOutSpatialReference(getMapSpatialReference());
+                rp.setUseTimeWindows(false);
+                rp.setImpedanceAttributeName("Length");
+                rp.setOutSpatialReference(mSpatialReference);
 
 
                 NAFeaturesAsFeature rfaf = new NAFeaturesAsFeature();
@@ -213,6 +217,8 @@ public class ArcTripMapViewController extends MapViewController
                     @Override
                     public void onClick(View v) {
                         Log.d(TAG, "clicked FAB");
+                        NearbyFeatureGallery.get(getContext()).setEndP(mEndP);
+                        NearbyFeatureGallery.get(getContext()).setStartP(mEndP);
                         mListener.onFABClicked(mRouteResults.getRoutes().get(mRouteResultViewController.getCurrRoute()));
                     }
                 });
@@ -280,14 +286,14 @@ public class ArcTripMapViewController extends MapViewController
 
                 }
                 public void onSwipeRight() {
-                    if(mCurrRoute>= 0){
+                    if(mCurrRoute> 0){
                         mCurrRoute--;
                         changeTextView(mCurrRoute);
 //                        drawRouteResult(mCurrRoute);
                     }
                 }
                 public void onSwipeLeft() {
-                    if(mCurrRoute<mRouteResultSize){
+                    if(mCurrRoute<mRouteResultSize-1){
                         mCurrRoute++;
                         changeTextView(mCurrRoute);
 //                        drawRouteResult(mCurrRoute);
