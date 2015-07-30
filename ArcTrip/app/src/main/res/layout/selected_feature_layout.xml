@@ -79,13 +79,28 @@
     <com.esri.android.map.MapView
         android:id="@+id/map"
         android:layout_below="@id/select_star_layout"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="30dp"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         mapoptions.MapType="Streets"
         mapoptions.center="34.056215, -117.195668"
         mapoptions.ZoomLevel="16">
     </com.esri.android.map.MapView>
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@id/select_star_layout"
+        android:layout_marginTop="30dp"
+        android:text="Location Not Found"
+        android:textSize="50sp"
+        android:id="@+id/select_notfound_textview"
+        android:textStyle="italic"
+        android:gravity="center"
+        android:background="@color/eaf_activated"
+        android:visibility="gone"
+        />
+
+
 
 
 </RelativeLayout>

@@ -1,14 +1,12 @@
 package com.esri.android.mpayson.arctrip;
 
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.URLUtil;
 import android.widget.TextView;
 
 import com.esri.android.map.GraphicsLayer;
@@ -19,13 +17,11 @@ import com.esri.appframework.viewcontrollers.map.TouchHandler;
 import com.esri.appframework.viewcontrollers.map.tools.GPSMapTool;
 import com.esri.appframework.viewcontrollers.map.tools.search.SearchMapTool;
 import com.esri.appframework.wrappers.AGSMap;
-import com.esri.core.geometry.Geometry;
 import com.esri.core.geometry.GeometryEngine;
 import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polyline;
 import com.esri.core.geometry.SpatialReference;
 import com.esri.core.map.Graphic;
-import com.esri.core.renderer.SimpleRenderer;
 import com.esri.core.symbol.SimpleLineSymbol;
 import com.esri.core.symbol.SimpleMarkerSymbol;
 import com.esri.core.symbol.TextSymbol;
@@ -36,7 +32,6 @@ import com.esri.core.tasks.na.RouteParameters;
 import com.esri.core.tasks.na.RouteResult;
 import com.esri.core.tasks.na.RouteTask;
 import com.esri.core.tasks.na.StopGraphic;
-import com.esri.android.mpayson.arctrip.R;
 import com.squareup.otto.Subscribe;
 
 /**
@@ -95,8 +90,9 @@ public class ArcTripMapViewController extends MapViewController
         // doesn't appear to call the base class method (perhaps because we're a subclass?).
         //
 
-        String routeTaskURL = "http://sampleserver3.arcgisonline.com/ArcGIS/rest/services/Network/USA/NAServer/Route";
+//        String routeTaskURL = "http://route.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World/solve";
 //        String routeTaskURL = "http://route.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World";
+        String routeTaskURL = "http://sampleserver3.arcgisonline.com/ArcGIS/rest/services/Network/USA/NAServer/Route";
         try {
             mRouteTask = RouteTask.createOnlineRouteTask(routeTaskURL, null);
         } catch (Exception e) {
@@ -170,7 +166,7 @@ public class ArcTripMapViewController extends MapViewController
 
         @Override
         protected void onPreExecute(){
-            DialogUtils.showProgressDialog("Generating Routes", "We'll get you there...",
+            Utils.showProgressDialog("Generating Routes", "We'll get you there...",
                     getDependencyContainer().getCurrentActivity());
         }
 
@@ -193,18 +189,35 @@ public class ArcTripMapViewController extends MapViewController
                 rfaf.setFeatures(new Graphic[]{point1, point2});
                 rp.setStops(rfaf);
 
-                return mRouteTask.solve(rp);
+                RouteResult temp = null;
+                int counter = 0;
+                while(temp == null && counter < 100){
+                    temp = trySolve(rp);
+                    counter++;
+                }
+                return temp;
 
 
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 e.printStackTrace();
+                return null;
+            }
+        }
+
+        protected RouteResult trySolve(RouteParameters rp){
+            try{
+                return mRouteTask.solve(rp);
+            }
+            catch(Exception e){
+                Log.d(TAG,"Route Error" + e.toString());
                 return null;
             }
         }
 
         @Override
         protected void onPostExecute(RouteResult results){
-            DialogUtils.dismissProgress();
+            Utils.dismissProgress();
             if(results != null) {
                 Log.d(TAG, "k");
                 mRouteResults = results;
@@ -218,7 +231,7 @@ public class ArcTripMapViewController extends MapViewController
                     public void onClick(View v) {
                         Log.d(TAG, "clicked FAB");
                         NearbyFeatureGallery.get(getContext()).setEndP(mEndP);
-                        NearbyFeatureGallery.get(getContext()).setStartP(mEndP);
+                        NearbyFeatureGallery.get(getContext()).setStartP(mStartP);
                         mListener.onFABClicked(mRouteResults.getRoutes().get(mRouteResultViewController.getCurrRoute()));
                     }
                 });

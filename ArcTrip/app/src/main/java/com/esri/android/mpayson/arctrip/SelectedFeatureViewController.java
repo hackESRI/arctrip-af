@@ -12,7 +12,6 @@ import android.widget.TextView;
 import com.esri.android.map.GraphicsLayer;
 import com.esri.android.map.MapView;
 import com.esri.android.map.event.OnStatusChangedListener;
-import com.esri.appframework.common.ViewAccessory;
 import com.esri.appframework.viewcontrollers.BaseViewController;
 
 import com.esri.core.geometry.GeometryEngine;
@@ -25,7 +24,6 @@ import com.esri.core.symbol.SimpleMarkerSymbol;
 import com.esri.core.symbol.TextSymbol;
 import com.esri.core.tasks.na.DirectionsLengthUnit;
 import com.esri.core.tasks.na.NAFeaturesAsFeature;
-import com.esri.core.tasks.na.Route;
 import com.esri.core.tasks.na.RouteParameters;
 import com.esri.core.tasks.na.RouteResult;
 import com.esri.core.tasks.na.RouteTask;
@@ -38,6 +36,7 @@ import java.util.UUID;
  * Created by maxw8108 on 7/29/15.
  */
 public class SelectedFeatureViewController extends BaseViewController {
+    final static String TAG = "SelectedFeatureVC";
     private static final SpatialReference EGS = SpatialReference.create(4326);
     TextView mTitleText;
     ArrayList<ImageView> mStars;
@@ -47,6 +46,7 @@ public class SelectedFeatureViewController extends BaseViewController {
     GraphicsLayer mRouteLayer;
     GraphicsLayer mMarkerLayer;
     RouteTask mRouteTask;
+    Point mMidP;
 
     public SelectedFeatureViewController(UUID id){
         mID = id;
@@ -67,6 +67,14 @@ public class SelectedFeatureViewController extends BaseViewController {
 
         mMapView = (MapView) v.findViewById(R.id.map);
 
+        //        mMidP = mNearbyFeature.getPoint();
+        mMidP = new Point(-1.3046173349916304E7, 4036555.457708142);
+
+        if(mMidP == null){
+            mMapView.setVisibility(View.GONE);
+            v.findViewById(R.id.select_notfound_textview).setVisibility(View.VISIBLE);
+        }
+
         mMapView.setOnStatusChangedListener(new OnStatusChangedListener() {
             public void onStatusChanged(Object source, STATUS status) {
                 if ((source == mMapView) && (status == STATUS.INITIALIZED)) {
@@ -78,11 +86,12 @@ public class SelectedFeatureViewController extends BaseViewController {
         mNearbyFeature = NearbyFeatureGallery.get(getContext()).getNearbyFeature(mID);
 
         ((TextView) v.findViewById(R.id.selected_feature_title)).setText(mNearbyFeature.getTitle());
-//        mStars.add((ImageView) v.findViewById(R.id.select_star_5));
-//        mStars.add((ImageView) v.findViewById(R.id.select_star_4));
-//        mStars.add((ImageView) v.findViewById(R.id.select_star_3));
-//        mStars.add((ImageView) v.findViewById(R.id.select_star_2));
-//        mStars.add((ImageView) v.findViewById(R.id.select_star_1));
+        mStars = new ArrayList<ImageView>();
+        mStars.add((ImageView) v.findViewById(R.id.select_star_5));
+        mStars.add((ImageView) v.findViewById(R.id.select_star_4));
+        mStars.add((ImageView) v.findViewById(R.id.select_star_3));
+        mStars.add((ImageView) v.findViewById(R.id.select_star_2));
+        mStars.add((ImageView) v.findViewById(R.id.select_star_1));
 
         for(int i = 0; i < mNearbyFeature.getStars(); i++){
             mStars.get(i).setAlpha((float)1.0);
@@ -92,30 +101,26 @@ public class SelectedFeatureViewController extends BaseViewController {
     }
 
     private void mapLoaded(){
-        mMarkerLayer= new GraphicsLayer();
-        mMapView.addLayer(mMarkerLayer);
-        mRouteLayer = new GraphicsLayer();
-        mMapView.addLayer(mRouteLayer);
+        if(mMidP != null) {
+            mMarkerLayer = new GraphicsLayer();
+            mMapView.addLayer(mMarkerLayer);
+            mRouteLayer = new GraphicsLayer();
+            mMapView.addLayer(mRouteLayer);
 
-        Point startP = NearbyFeatureGallery.get(getContext()).getStartP();
-        Point endP = NearbyFeatureGallery.get(getContext()).getEndP();
+            Point startP = NearbyFeatureGallery.get(getContext()).getStartP();
+            Point endP = NearbyFeatureGallery.get(getContext()).getEndP();
 
-//        Point midP = mNearbyFeature.getPoint();
-        Point midP = new Point(-1.3046173349916304E7, 4036555.457708142);
+            drawDot(ArcTripMapViewController.PointType.START,
+                    startP, "S");
+            drawDot(ArcTripMapViewController.PointType.END,
+                    endP, "F");
+            drawDot(ArcTripMapViewController.PointType.STOP, mMidP, "P");
+            mMapView.centerAt(mMidP, true);
 
-        mMapView.centerAt(midP, true);
+
+            new generateAutoRoute(startP, endP, mMidP).execute();
 
 
-        drawDot(ArcTripMapViewController.PointType.START,
-                startP, "S");
-        drawDot(ArcTripMapViewController.PointType.END,
-                endP, "F");
-
-        if(midP != null) {
-            drawDot(ArcTripMapViewController.PointType.STOP, midP, "P");
-            new generateAutoRoute(startP, endP, midP).execute();
-        } else {
-            new generateAutoRoute(startP, endP, null).execute();
         }
 
 
@@ -128,14 +133,13 @@ public class SelectedFeatureViewController extends BaseViewController {
         public generateAutoRoute(Point prevP, Point currP, Point mP){
             startP = (Point) GeometryEngine.project(prevP, mMapView.getSpatialReference(), EGS);
             endP = (Point) GeometryEngine.project(currP, mMapView.getSpatialReference(), EGS);
-            if(midP != null) {
-                midP = (Point) GeometryEngine.project(mP, mMapView.getSpatialReference(), EGS);
-            }
+            midP = (Point) GeometryEngine.project(mP, mMapView.getSpatialReference(), EGS);
+
         }
 
         @Override
         protected void onPreExecute(){
-            DialogUtils.showProgressDialog("Generating Routes", "We'll get you there...",
+            Utils.showProgressDialog("Calculating new route", "For the visual learners out there...",
                     getDependencyContainer().getCurrentActivity());
         }
 
@@ -154,15 +158,17 @@ public class SelectedFeatureViewController extends BaseViewController {
 
                 StopGraphic point1 = new StopGraphic(startP);
                 StopGraphic point2 = new StopGraphic(endP);
-                if(midP != null) {
-                    StopGraphic point3 = new StopGraphic(midP);
-                    rfaf.setFeatures(new Graphic[]{point1, point3, point2});
-                } else {
-                    rfaf.setFeatures(new Graphic[]{point1, point2});
-                }
+                StopGraphic point3 = new StopGraphic(midP);
+                rfaf.setFeatures(new Graphic[]{point1, point3, point2});
                 rp.setStops(rfaf);
 
-                return mRouteTask.solve(rp);
+                RouteResult temp = null;
+                int counter = 0;
+                while(temp == null && counter < 100){
+                    temp = trySolve(rp);
+                    counter++;
+                }
+                return temp;
 
 
             } catch (Exception e) {
@@ -171,20 +177,32 @@ public class SelectedFeatureViewController extends BaseViewController {
             }
         }
 
+        protected RouteResult trySolve(RouteParameters rp){
+            try{
+                return mRouteTask.solve(rp);
+            }
+            catch(Exception e){
+                Log.d(TAG, "Route Error" + e.toString());
+                return null;
+            }
+        }
+
 
         //TODO GET INDEX?!
         @Override
         protected void onPostExecute(RouteResult results){
-            DialogUtils.dismissProgress();
+            Utils.dismissProgress();
             if(results != null) {
                 Polyline routeGeom = (Polyline) results.getRoutes().get(0).getRouteGraphic().getGeometry();
-                mRouteLayer.addGraphic(new Graphic(routeGeom, new SimpleLineSymbol(Color.BLUE,3)));
+                mRouteLayer.addGraphic(new Graphic(routeGeom, new SimpleLineSymbol(Color.BLUE, 3)));
+
             }
         }
 
     }
 
     public void drawDot(ArcTripMapViewController.PointType type, Point p, String dispStr){
+
         SimpleMarkerSymbol simpleMarker = null;
 
         switch (type){
@@ -192,7 +210,7 @@ public class SelectedFeatureViewController extends BaseViewController {
                 simpleMarker = new SimpleMarkerSymbol(Color.GREEN, 20, SimpleMarkerSymbol.STYLE.CIRCLE);
                 break;
             case STOP:
-                simpleMarker = new SimpleMarkerSymbol(Color.BLUE, 10, SimpleMarkerSymbol.STYLE.CIRCLE);
+                simpleMarker = new SimpleMarkerSymbol(Color.BLUE, 20, SimpleMarkerSymbol.STYLE.CIRCLE);
                 break;
             case END:
                 simpleMarker = new SimpleMarkerSymbol(Color.RED, 20, SimpleMarkerSymbol.STYLE.CIRCLE);

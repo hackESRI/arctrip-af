@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="20dp">
+        <Button
+            android:layout_width="120dp"
+            android:layout_height="80dp"
+            android:id="@+id/on_stop_bathroom_button"
+            android:layout_marginRight="5dp"
+            android:text="Bathroom"
+            />
+        <Button
+            android:layout_width="120dp"
+            android:layout_height="80dp"
+            android:id="@+id/on_stop_gas_button"
+            android:layout_marginLeft="5dp"
+            android:text="Gas"/>
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="10dp">
+        <Button
+            android:layout_width="120dp"
+            android:layout_height="80dp"
+            android:layout_marginRight="5dp"
+            android:text="Selected Stop"
+            android:id="@+id/on_stop_previous_button"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            />
+        <Button
+            android:layout_width="120dp"
+            android:layout_height="80dp"
+            android:id="@+id/on_stop_none_button"
+            android:layout_marginLeft="5dp"
+            android:text="None"/>
+
+    </LinearLayout>
+
+</LinearLayout>
