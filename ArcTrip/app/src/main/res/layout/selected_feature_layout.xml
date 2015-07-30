@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Title"
+        android:id="@+id/selected_feature_title"
+        android:textSize="25sp"
+        android:textStyle="bold"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="20dp"/>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/selected_feature_title"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="20dp"
+        android:id="@+id/select_star_layout">
+        <ImageView
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:src="@android:drawable/sym_def_app_icon"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/select_star_5"
+            android:layout_marginRight="5dp"
+            android:alpha=".3"
+            />
+        <ImageView
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:src="@android:drawable/sym_def_app_icon"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/select_star_4"
+            android:layout_marginRight="5dp"
+            android:alpha=".3"
+            />
+        <ImageView
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:src="@android:drawable/sym_def_app_icon"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/select_star_3"
+            android:layout_marginRight="5dp"
+            android:alpha=".3"
+            />
+        <ImageView
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:src="@android:drawable/sym_def_app_icon"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/select_star_2"
+            android:layout_marginRight="5dp"
+            android:alpha=".3"
+            />
+        <ImageView
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:src="@android:drawable/sym_def_app_icon"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/select_star_1"
+            android:layout_marginRight="5dp"
+            android:alpha=".3"
+            />
+    </LinearLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:layout_marginLeft="5dp"
+        android:layout_toRightOf="@id/select_star_layout"
+        android:layout_below="@id/selected_feature_title"
+        android:text="Est Added Time:"
+        android:textSize="15sp"
+        android:textStyle="italic"/>
+    <com.esri.android.map.MapView
+        android:id="@+id/map"
+        android:layout_below="@id/select_star_layout"
+        android:layout_marginTop="30dp"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        mapoptions.MapType="Streets"
+        mapoptions.center="34.056215, -117.195668"
+        mapoptions.ZoomLevel="16">
+    </com.esri.android.map.MapView>
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@id/select_star_layout"
+        android:layout_marginTop="30dp"
+        android:text="Location Not Found"
+        android:textSize="50sp"
+        android:id="@+id/select_notfound_textview"
+        android:textStyle="italic"
+        android:gravity="center"
+        android:background="@color/eaf_activated"
+        android:visibility="gone"
+        />
+
+
+
+
+</RelativeLayout>

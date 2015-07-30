@@ -1,16 +1,28 @@
 package com.esri.android.mpayson.arctrip;
 
-import android.graphics.Point;
+import com.esri.core.geometry.Point;
+
+import java.util.UUID;
 
 /**
  * Created by maxw8108 on 7/29/15.
  */
 public class NearbyFeature {
+    private Point mPoint;
+    private String mTitle;
+    private int mStars;
+    private UUID mID;
 
     public NearbyFeature(String title, float stars, Point point){
         mPoint = point;
         mStars = Math.round(stars);
         mTitle = title;
+        mID = UUID.randomUUID();
+
+    }
+
+    public UUID getID() {
+        return mID;
     }
 
     public Point getPoint() {
@@ -37,7 +49,4 @@ public class NearbyFeature {
         mStars = Math.round(stars);
     }
 
-    Point mPoint;
-    String mTitle;
-    int mStars;
 }
