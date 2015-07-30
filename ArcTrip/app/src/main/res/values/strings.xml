@@ -3,4 +3,8 @@
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="select_type_bathroom">Bathroom</string>
+    <string name="select_type_gas">gas</string>
+    <string name="select_type_textview">Select Service</string>
+    <string name="select_type_route_textview">Route Details</string>
 </resources>

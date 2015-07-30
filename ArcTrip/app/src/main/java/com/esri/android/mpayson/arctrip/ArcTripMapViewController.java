@@ -62,7 +62,17 @@ public class ArcTripMapViewController extends MapViewController
     private RouteResult mRouteResults;
     private RouteResultViewController mRouteResultViewController;
 
+    private ArcTripMapVCListener mListener;
+
     public static final String TAG = "ArcTripMapVC";
+
+    public interface ArcTripMapVCListener{
+        void onFABClicked(Route route);
+    }
+
+    public void setListener(ArcTripMapVCListener listener){
+        mListener = listener;
+    }
 
     public ArcTripMapViewController(AGSMap map) {
         super(map);
@@ -101,10 +111,11 @@ public class ArcTripMapViewController extends MapViewController
         // Create/add a graphics layer to display search results in
         //
 
-        mMarkerLayer = new GraphicsLayer();
-        addMapLayer(mMarkerLayer);
         mRouteLayer = new GraphicsLayer();
         addMapLayer(mRouteLayer);
+        mMarkerLayer = new GraphicsLayer();
+        addMapLayer(mMarkerLayer);
+
 
         GraphicsLayer graphicsLayer = new GraphicsLayer();
         addMapLayer(graphicsLayer);
@@ -201,11 +212,11 @@ public class ArcTripMapViewController extends MapViewController
                 routeResultViewAccessory.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Log.d(TAG, "clicked_");
+                        Log.d(TAG, "clicked FAB");
+                        mListener.onFABClicked(mRouteResults.getRoutes().get(mRouteResultViewController.getCurrRoute()));
                     }
                 });
                 showViewControllerInBottomPanel(mRouteResultViewController, routeResultViewAccessory);
-                showViewControllerInBottomPanel(mRouteResultViewController);
             }
         }
 
