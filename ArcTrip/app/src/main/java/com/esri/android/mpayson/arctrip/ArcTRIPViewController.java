@@ -39,8 +39,8 @@ public class ArcTRIPViewController extends NavigationViewController
     public View createView(ViewGroup parentView, Bundle savedState){
         View v = super.createView(parentView, savedState);
 
-        startRouting();
-//        startCrowdSourcing();
+//        startRouting();
+        startCrowdSourcing();
         return v;
     }
 

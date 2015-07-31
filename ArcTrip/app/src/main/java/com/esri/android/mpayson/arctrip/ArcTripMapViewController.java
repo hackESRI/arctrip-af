@@ -172,10 +172,14 @@ public class ArcTripMapViewController extends MapViewController
 
         @Override
         protected RouteResult doInBackground(Void... params){
-            try {
 
-                RouteParameters rp = mRouteTask
-                        .retrieveDefaultRouteTaskParameters();
+            RouteParameters rp = null;
+            int counter = 0;
+            while (rp == null && counter < 100) {
+                counter++;
+                rp = tryGetParams();
+            }
+            if (rp != null){
                 rp.setDirectionsLengthUnit(DirectionsLengthUnit.MILES);
                 rp.setUseTimeWindows(false);
                 rp.setImpedanceAttributeName("Length");
@@ -190,17 +194,21 @@ public class ArcTripMapViewController extends MapViewController
                 rp.setStops(rfaf);
 
                 RouteResult temp = null;
-                int counter = 0;
-                while(temp == null && counter < 100){
+                counter = 0;
+                while (temp == null && counter < 100) {
                     temp = trySolve(rp);
                     counter++;
                 }
                 return temp;
-
-
             }
-            catch (Exception e) {
-                e.printStackTrace();
+            return null;
+        }
+
+        protected RouteParameters tryGetParams(){
+            try {
+                return mRouteTask.retrieveDefaultRouteTaskParameters();
+            } catch (Exception e) {
+                Log.d(TAG, "Param error" + e.toString());
                 return null;
             }
         }
@@ -302,14 +310,16 @@ public class ArcTripMapViewController extends MapViewController
                     if(mCurrRoute> 0){
                         mCurrRoute--;
                         changeTextView(mCurrRoute);
-//                        drawRouteResult(mCurrRoute);
+                        drawRouteResult(mCurrRoute);
+                    } else{
+
                     }
                 }
                 public void onSwipeLeft() {
                     if(mCurrRoute<mRouteResultSize-1){
                         mCurrRoute++;
                         changeTextView(mCurrRoute);
-//                        drawRouteResult(mCurrRoute);
+                        drawRouteResult(mCurrRoute);
                     }
                 }
                 public void onSwipeBottom() {
