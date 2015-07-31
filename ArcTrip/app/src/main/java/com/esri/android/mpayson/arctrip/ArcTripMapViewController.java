@@ -3,11 +3,14 @@ package com.esri.android.mpayson.arctrip;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.esri.android.map.GraphicsLayer;
 import com.esri.appframework.common.ViewAccessory;
@@ -52,6 +55,7 @@ public class ArcTripMapViewController extends MapViewController
     private GraphicsLayer mMarkerLayer;
     private GraphicsLayer mRouteLayer;
     SpatialReference mSpatialReference;
+    private Toolbar mToolbar;
 
     private AsyncTask mRouteAsyncTask;
     private RouteTask mRouteTask;
@@ -64,6 +68,7 @@ public class ArcTripMapViewController extends MapViewController
 
     public interface ArcTripMapVCListener{
         void onFABClicked(Route route);
+        void onContributeClicked();
     }
 
     public void setListener(ArcTripMapVCListener listener){
@@ -122,10 +127,32 @@ public class ArcTripMapViewController extends MapViewController
         // Define which tools we want to include in the map view controller
         //
         addMapTool(new GPSMapTool());
+        addMapTool(new ClearRouteMapTool(new ClearRouteMapTool.ClearRouteToolListener() {
+            @Override
+            public void onClearClicked() {
+                closeBottomPanel();
+                mStartP = null;
+                mEndP = null;
+                mRouteLayer.removeAll();
+                mMarkerLayer.removeAll();
+            }
+
+            @Override
+            public void onContributeClicked() {
+                mListener.onContributeClicked();
+            }
+        }));
 
         mSearchMapTool = new SearchMapTool(getDependencyContainer(), this, graphicsLayer);
 //        searchMapTool.setResultSummaryViewAccessory(createRouteToResultViewAccessory());
         addMapTool(mSearchMapTool);
+
+
+        mToolbar = (Toolbar) getDependencyContainer().get(Toolbar.class);
+        if(mToolbar != null){
+            mToolbar.setTitle("Map");
+        }
+
 
         getMapViewControllerTouchListener().addOnTapListener(new TouchHandler() {
             @Override
@@ -144,7 +171,6 @@ public class ArcTripMapViewController extends MapViewController
                 } else if (mEndP == null) {
                     drawDot(PointType.END, mapPoint, "F");
                     mEndP = mapPoint;
-                    mRouteAsyncTask = new generateAutoRoute(mStartP, mEndP).execute();
                 }
             }
 
@@ -156,102 +182,7 @@ public class ArcTripMapViewController extends MapViewController
 
     }
 
-    private class generateAutoRoute extends AsyncTask<Void, Void, RouteResult> {
-        Point startP, endP;
 
-        public generateAutoRoute(Point prevP, Point currP){
-            startP = (Point) GeometryEngine.project(prevP, getMapSpatialReference(), EGS);
-            endP = (Point) GeometryEngine.project(currP, getMapSpatialReference(), EGS);
-        }
-
-        @Override
-        protected void onPreExecute(){
-            Utils.showProgressDialog("Generating Routes", "We'll get you there...",
-                    getDependencyContainer().getCurrentActivity());
-        }
-
-        @Override
-        protected RouteResult doInBackground(Void... params){
-
-            RouteParameters rp = null;
-            int counter = 0;
-            while (rp == null && counter < 100) {
-                counter++;
-                rp = tryGetParams();
-            }
-            if (rp != null){
-                rp.setDirectionsLengthUnit(DirectionsLengthUnit.MILES);
-                rp.setUseTimeWindows(false);
-                rp.setImpedanceAttributeName("Length");
-                rp.setOutSpatialReference(mSpatialReference);
-
-
-                NAFeaturesAsFeature rfaf = new NAFeaturesAsFeature();
-
-                StopGraphic point1 = new StopGraphic(startP);
-                StopGraphic point2 = new StopGraphic(endP);
-                rfaf.setFeatures(new Graphic[]{point1, point2});
-                rp.setStops(rfaf);
-
-                RouteResult temp = null;
-                counter = 0;
-                while (temp == null && counter < 100) {
-                    temp = trySolve(rp);
-                    counter++;
-                }
-                return temp;
-            }
-            return null;
-        }
-
-        protected RouteParameters tryGetParams(){
-            try {
-                return mRouteTask.retrieveDefaultRouteTaskParameters();
-            } catch (Exception e) {
-                Log.d(TAG, "Param error" + e.toString());
-                return null;
-            }
-        }
-
-        protected RouteResult trySolve(RouteParameters rp){
-            try{
-                return mRouteTask.solve(rp);
-            }
-            catch(Exception e){
-                Log.d(TAG,"Route Error" + e.toString());
-                return null;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(RouteResult results){
-            Utils.dismissProgress();
-            if(results != null) {
-                Log.d(TAG, "k");
-                mRouteResults = results;
-                drawRouteResult(0);
-                mRouteResultViewController = new RouteResultViewController(0, results.getRoutes().size());
-//                mRouteResultViewController = new RouteResultViewController(0, 5);
-                mRouteResultViewController.setDependencyContainer(getDependencyContainer());
-                ViewAccessory routeResultViewAccessory = new ViewAccessory();
-                routeResultViewAccessory.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Log.d(TAG, "clicked FAB");
-                        NearbyFeatureGallery.get(getContext()).setEndP(mEndP);
-                        NearbyFeatureGallery.get(getContext()).setStartP(mStartP);
-                        mListener.onFABClicked(mRouteResults.getRoutes().get(mRouteResultViewController.getCurrRoute()));
-                    }
-                });
-                showViewControllerInBottomPanel(mRouteResultViewController, routeResultViewAccessory);
-            }
-        }
-
-    }
-    protected void drawRouteResult(int index){
-        Polyline routeGeom = (Polyline) mRouteResults.getRoutes().get(index).getRouteGraphic().getGeometry();
-        mRouteLayer.addGraphic(new Graphic(routeGeom, new SimpleLineSymbol(Color.BLUE,3)));
-    }
 
     public void drawDot(PointType type, Point p, String dispStr){
         SimpleMarkerSymbol simpleMarker = null;
@@ -310,16 +241,19 @@ public class ArcTripMapViewController extends MapViewController
                     if(mCurrRoute> 0){
                         mCurrRoute--;
                         changeTextView(mCurrRoute);
-                        drawRouteResult(mCurrRoute);
-                    } else{
 
+
+                    } else{
+                        noRouteToast();
                     }
                 }
                 public void onSwipeLeft() {
                     if(mCurrRoute<mRouteResultSize-1){
                         mCurrRoute++;
                         changeTextView(mCurrRoute);
-                        drawRouteResult(mCurrRoute);
+
+                    } else {
+                        noRouteToast();
                     }
                 }
                 public void onSwipeBottom() {
@@ -333,6 +267,13 @@ public class ArcTripMapViewController extends MapViewController
 
 
             return v;
+        }
+
+        private void noRouteToast(){
+            CharSequence text = "No more routes, darn!";
+            int duration = Toast.LENGTH_SHORT;
+            Toast toast = Toast.makeText(getContext(), text, duration);
+            toast.show();
         }
 
         private void changeTextView(int route){

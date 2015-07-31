@@ -12,6 +12,7 @@ public class NearbyFeature {
     private String mTitle;
     private int mStars;
     private UUID mID;
+    private int mVisits;
 
     public NearbyFeature(String title, float stars, Point point){
         mPoint = point;

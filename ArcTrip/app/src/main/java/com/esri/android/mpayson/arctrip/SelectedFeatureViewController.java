@@ -118,8 +118,6 @@ public class SelectedFeatureViewController extends BaseViewController {
             mMapView.centerAt(mMidP, true);
 
 
-            new generateAutoRoute(startP, endP, mMidP).execute();
-
 
         }
 
@@ -127,79 +125,6 @@ public class SelectedFeatureViewController extends BaseViewController {
 
     }
 
-    private class generateAutoRoute extends AsyncTask<Void, Void, RouteResult> {
-        Point startP, endP, midP;
-
-        public generateAutoRoute(Point prevP, Point currP, Point mP){
-            startP = (Point) GeometryEngine.project(prevP, mMapView.getSpatialReference(), EGS);
-            endP = (Point) GeometryEngine.project(currP, mMapView.getSpatialReference(), EGS);
-            midP = (Point) GeometryEngine.project(mP, mMapView.getSpatialReference(), EGS);
-
-        }
-
-        @Override
-        protected void onPreExecute(){
-            Utils.showProgressDialog("Calculating new route", "For the visual learners out there...",
-                    getDependencyContainer().getCurrentActivity());
-        }
-
-        @Override
-        protected RouteResult doInBackground(Void... params){
-            try {
-
-                RouteParameters rp = mRouteTask
-                        .retrieveDefaultRouteTaskParameters();
-                rp.setDirectionsLengthUnit(DirectionsLengthUnit.MILES);
-                rp.setImpedanceAttributeName("Time");
-                rp.setOutSpatialReference(mMapView.getSpatialReference());
-
-
-                NAFeaturesAsFeature rfaf = new NAFeaturesAsFeature();
-
-                StopGraphic point1 = new StopGraphic(startP);
-                StopGraphic point2 = new StopGraphic(endP);
-                StopGraphic point3 = new StopGraphic(midP);
-                rfaf.setFeatures(new Graphic[]{point1, point3, point2});
-                rp.setStops(rfaf);
-
-                RouteResult temp = null;
-                int counter = 0;
-                while(temp == null && counter < 100){
-                    temp = trySolve(rp);
-                    counter++;
-                }
-                return temp;
-
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        protected RouteResult trySolve(RouteParameters rp){
-            try{
-                return mRouteTask.solve(rp);
-            }
-            catch(Exception e){
-                Log.d(TAG, "Route Error" + e.toString());
-                return null;
-            }
-        }
-
-
-        //TODO GET INDEX?!
-        @Override
-        protected void onPostExecute(RouteResult results){
-            Utils.dismissProgress();
-            if(results != null) {
-                Polyline routeGeom = (Polyline) results.getRoutes().get(0).getRouteGraphic().getGeometry();
-                mRouteLayer.addGraphic(new Graphic(routeGeom, new SimpleLineSymbol(Color.BLUE, 3)));
-
-            }
-        }
-
-    }
 
     public void drawDot(ArcTripMapViewController.PointType type, Point p, String dispStr){
 
